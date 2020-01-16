@@ -1,0 +1,27 @@
+{
+  "name": "aexpr-proxies",
+  "version": "2.3.10",
+  "description": "Proxy based implementation strategy of active expressions",
+  "main": "active-expression-proxies.js",
+  "jsnext:main": "active-expression-proxies.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/active-expressions/aexpr-proxies.git"
+  },
+  "keywords": [
+    "babel-plugin",
+    "babel",
+    "plugin",
+    "proxies",
+    "active",
+    "expression",
+    "expressions",
+    "active-expression"
+  ],
+  "author": {
+    "name": "Jonas Noack & Nico Scordialo",
+    "email": "jonas.noack@student.hpi.de",
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/active-expressions/aexpr-proxies",
+}
