@@ -12,7 +12,7 @@ exports.unwrap = unwrap;
 exports.wrap = wrap;
 exports.aexpr = aexpr;
 
-var _activeExpression = require('active-expression');
+var _activeExpressions = require('active-expressions');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -152,4 +152,4 @@ var ProxiesActiveExpression = exports.ProxiesActiveExpression = function (_BaseA
   }]);
 
   return ProxiesActiveExpression;
-}(_activeExpression.BaseActiveExpression);
+}(_activeExpressions.BaseActiveExpression);
