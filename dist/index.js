@@ -22,16 +22,16 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-window.__expressionAnalysisMode__ = false;
+global.__expressionAnalysisMode__ = false;
 
-window.__currentActiveExpression__ = false;
+global.__currentActiveExpression__ = false;
 
 function reset() {
   // maps from target ids to active expressions
-  window.__proxyIdToActiveExpressionsMap__ = new Map();
+  global.__proxyIdToActiveExpressionsMap__ = new Map();
 
   // maps from proxy to target
-  window.__proxyToTargetMap__ = new WeakMap();
+  global.__proxyToTargetMap__ = new WeakMap();
 }
 
 reset();
@@ -39,11 +39,11 @@ reset();
 var basicHandlerFactory = function basicHandlerFactory(id) {
   return {
     get: function get(target, property) {
-      if (window.__expressionAnalysisMode__) {
-        var dependencies = window.__proxyIdToActiveExpressionsMap__.get(id);
+      if (global.__expressionAnalysisMode__) {
+        var dependencies = global.__proxyIdToActiveExpressionsMap__.get(id);
 
-        dependencies.add(window.__currentActiveExpression__);
-        window.__proxyIdToActiveExpressionsMap__.set(id, dependencies);
+        dependencies.add(global.__currentActiveExpression__);
+        global.__proxyIdToActiveExpressionsMap__.set(id, dependencies);
       }
       if (typeof target[property] === 'function') {
         return Reflect.get(target, property).bind(target);
@@ -54,7 +54,7 @@ var basicHandlerFactory = function basicHandlerFactory(id) {
     set: function set(target, property, value) {
       Reflect.set(target, property, value);
 
-      window.__proxyIdToActiveExpressionsMap__.get(id).forEach(function (dependentActiveExpression) {
+      global.__proxyIdToActiveExpressionsMap__.get(id).forEach(function (dependentActiveExpression) {
         return dependentActiveExpression.notifyOfUpdate();
       });
       return true;
@@ -65,13 +65,13 @@ var basicHandlerFactory = function basicHandlerFactory(id) {
 var functionHandlerFactory = function functionHandlerFactory(id) {
   return {
     apply: function apply(target, thisArg, argumentsList) {
-      thisArg = window.__proxyToTargetMap__.get(thisArg) || thisArg;
+      thisArg = global.__proxyToTargetMap__.get(thisArg) || thisArg;
 
-      if (window.__expressionAnalysisMode__) {
+      if (global.__expressionAnalysisMode__) {
         return target.bind(thisArg).apply(undefined, _toConsumableArray(argumentsList));
       }
       var result = target.bind(thisArg).apply(undefined, _toConsumableArray(argumentsList));
-      window.__proxyIdToActiveExpressionsMap__.get(id).forEach(function (dependentActiveExpression) {
+      global.__proxyIdToActiveExpressionsMap__.get(id).forEach(function (dependentActiveExpression) {
         return dependentActiveExpression.notifyOfUpdate();
       });
       return result;
@@ -80,12 +80,12 @@ var functionHandlerFactory = function functionHandlerFactory(id) {
 };
 
 function unwrap(proxy) {
-  return window.__proxyToTargetMap__.get(proxy) || proxy;
+  return global.__proxyToTargetMap__.get(proxy) || proxy;
 }
 
 function wrap(typeOfWhat, what) {
-  if (window.__proxyToTargetMap__.has(what)) return what;
-  var id = window.__proxyIdToActiveExpressionsMap__.size;
+  if (global.__proxyToTargetMap__.has(what)) return what;
+  var id = global.__proxyIdToActiveExpressionsMap__.size;
   var basicHandler = basicHandlerFactory(id);
 
   if (typeOfWhat !== 'Object') {
@@ -105,9 +105,9 @@ function wrap(typeOfWhat, what) {
     });
   }
 
-  window.__proxyIdToActiveExpressionsMap__.set(id, new Set());
+  global.__proxyIdToActiveExpressionsMap__.set(id, new Set());
   var proxy = new Proxy(what, basicHandler);
-  window.__proxyToTargetMap__.set(proxy, what);
+  global.__proxyToTargetMap__.set(proxy, what);
 
   return proxy;
 }
@@ -141,13 +141,13 @@ var ProxiesActiveExpression = exports.ProxiesActiveExpression = function (_BaseA
   _createClass(ProxiesActiveExpression, [{
     key: 'notifyOfUpdate',
     value: function notifyOfUpdate() {
-      window.__expressionAnalysisMode__ = true;
-      window.__currentActiveExpression__ = this;
+      global.__expressionAnalysisMode__ = true;
+      global.__currentActiveExpression__ = this;
 
       this.func();
       this.checkAndNotify();
 
-      window.__expressionAnalysisMode__ = false;
+      global.__expressionAnalysisMode__ = false;
     }
   }]);
 

@@ -1,26 +1,26 @@
 import { BaseActiveExpression } from 'active-expressions';
 
-window.__expressionAnalysisMode__ = false;
+global.__expressionAnalysisMode__ = false;
 
-window.__currentActiveExpression__ = false;
+global.__currentActiveExpression__ = false;
 
 export function reset() {
   // maps from target ids to active expressions
-  window.__proxyIdToActiveExpressionsMap__ = new Map();
+  global.__proxyIdToActiveExpressionsMap__ = new Map();
 
   // maps from proxy to target
-  window.__proxyToTargetMap__ = new WeakMap();
+  global.__proxyToTargetMap__ = new WeakMap();
 }
 
 reset();
 
 const basicHandlerFactory = id => ({
   get: (target, property) => {
-    if (window.__expressionAnalysisMode__) {
-      let dependencies = window.__proxyIdToActiveExpressionsMap__.get(id);
+    if (global.__expressionAnalysisMode__) {
+      let dependencies = global.__proxyIdToActiveExpressionsMap__.get(id);
 
-      dependencies.add(window.__currentActiveExpression__);
-      window.__proxyIdToActiveExpressionsMap__.set(id, dependencies);
+      dependencies.add(global.__currentActiveExpression__);
+      global.__proxyIdToActiveExpressionsMap__.set(id, dependencies);
     }
     if (typeof target[property] === 'function') {
       return Reflect.get(target, property).bind(target);
@@ -31,7 +31,7 @@ const basicHandlerFactory = id => ({
   set: (target, property, value) => {
     Reflect.set(target, property, value);
 
-    window.__proxyIdToActiveExpressionsMap__
+    global.__proxyIdToActiveExpressionsMap__
       .get(id)
       .forEach(dependentActiveExpression =>
         dependentActiveExpression.notifyOfUpdate()
@@ -42,13 +42,13 @@ const basicHandlerFactory = id => ({
 
 const functionHandlerFactory = id => ({
   apply: (target, thisArg, argumentsList) => {
-    thisArg = window.__proxyToTargetMap__.get(thisArg) || thisArg;
+    thisArg = global.__proxyToTargetMap__.get(thisArg) || thisArg;
 
-    if (window.__expressionAnalysisMode__) {
+    if (global.__expressionAnalysisMode__) {
       return target.bind(thisArg)(...argumentsList);
     }
     const result = target.bind(thisArg)(...argumentsList);
-    window.__proxyIdToActiveExpressionsMap__
+    global.__proxyIdToActiveExpressionsMap__
       .get(id)
       .forEach(dependentActiveExpression =>
         dependentActiveExpression.notifyOfUpdate()
@@ -58,12 +58,12 @@ const functionHandlerFactory = id => ({
 });
 
 export function unwrap(proxy) {
-  return window.__proxyToTargetMap__.get(proxy) || proxy;
+  return global.__proxyToTargetMap__.get(proxy) || proxy;
 }
 
 export function wrap(typeOfWhat, what) {
-  if (window.__proxyToTargetMap__.has(what)) return what;
-  const id = window.__proxyIdToActiveExpressionsMap__.size;
+  if (global.__proxyToTargetMap__.has(what)) return what;
+  const id = global.__proxyIdToActiveExpressionsMap__.size;
   const basicHandler = basicHandlerFactory(id);
 
   if (typeOfWhat !== 'Object') {
@@ -83,9 +83,9 @@ export function wrap(typeOfWhat, what) {
     );
   }
 
-  window.__proxyIdToActiveExpressionsMap__.set(id, new Set());
+  global.__proxyIdToActiveExpressionsMap__.set(id, new Set());
   const proxy = new Proxy(what, basicHandler);
-  window.__proxyToTargetMap__.set(proxy, what);
+  global.__proxyToTargetMap__.set(proxy, what);
 
   return proxy;
 }
@@ -102,12 +102,12 @@ export class ProxiesActiveExpression extends BaseActiveExpression {
   }
 
   notifyOfUpdate() {
-    window.__expressionAnalysisMode__ = true;
-    window.__currentActiveExpression__ = this;
+    global.__expressionAnalysisMode__ = true;
+    global.__currentActiveExpression__ = this;
 
     this.func();
     this.checkAndNotify();
 
-    window.__expressionAnalysisMode__ = false;
+    global.__expressionAnalysisMode__ = false;
   }
 }
