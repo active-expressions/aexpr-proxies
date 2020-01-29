@@ -6,15 +6,16 @@ globalOrWindow.__expressionAnalysisMode__ = false;
 
 globalOrWindow.__currentActiveExpression__ = false;
 
-export function reset() {
-    // maps from target ids to active expressions
-    globalOrWindow.__proxyIdToActiveExpressionsMap__ = new Map();
+// maps from proxy to target
+globalOrWindow.__proxyToTargetMap__ = new WeakMap();
 
-    // maps from proxy to target
+// maps from target ids to active expressions
+globalOrWindow.__proxyIdToActiveExpressionsMap__ = new Map();
+
+export function reset() {
+    globalOrWindow.__proxyIdToActiveExpressionsMap__.clear();
     globalOrWindow.__proxyToTargetMap__ = new WeakMap();
 }
-
-reset();
 
 const basicHandlerFactory = id => ({
     get: (target, property) => {
@@ -33,6 +34,10 @@ const basicHandlerFactory = id => ({
     set: (target, property, value) => {
         Reflect.set(target, property, value);
 
+        if (!globalOrWindow.__proxyIdToActiveExpressionsMap__.has(id)){
+            globalOrWindow.__proxyIdToActiveExpressionsMap__.set(id, {});
+          }
+          
         globalOrWindow.__proxyIdToActiveExpressionsMap__
             .get(id)
             .forEach(dependentActiveExpression =>
