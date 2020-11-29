@@ -1,4 +1,4 @@
-import { BaseActiveExpression } from 'active-expression';
+import { BaseActiveExpression } from 'active-expressions';
 
 global.__expressionAnalysisMode__ = false;
 
